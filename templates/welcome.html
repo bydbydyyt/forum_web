@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}欢迎来到论坛与私聊系统{% endblock %}
+
+{% block extra_css %}
+<style>
+    .welcome-section {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+        color: white;
+        padding: 2rem;
+    }
+    
+    .welcome-content {
+        max-width: 800px;
+    }
+    
+    .welcome-title {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+        animation: fadeInDown 1s ease-out;
+    }
+    
+    .welcome-text {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        animation: fadeInUp 1s ease-out;
+    }
+    
+    .feature-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 1rem;
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="welcome-section">
+    <div class="welcome-content">
+        <h1 class="welcome-title">欢迎来到论坛与私聊系统</h1>
+        <p class="welcome-text">这是一个现代化的社区平台，在这里你可以分享想法、结交朋友、参与讨论。</p>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="fas fa-comments feature-icon"></i>
+                    <h3>论坛讨论</h3>
+                    <p>参与各种话题的讨论，分享你的见解和经验。</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="fas fa-user-friends feature-icon"></i>
+                    <h3>私聊交流</h3>
+                    <p>与好友进行私密对话，分享图片和文件。</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="fas fa-user-circle feature-icon"></i>
+                    <h3>个人空间</h3>
+                    <p>打造属于你的个人主页，展示你的收藏和成就。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            {% if user.is_authenticated %}
+                <a href="{% url 'forum:home' %}" class="btn btn-light btn-lg me-3">进入论坛</a>
+                <a href="{% url 'chat:home' %}" class="btn btn-outline-light btn-lg">开始聊天</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-light btn-lg me-3">登录</a>
+                <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">注册</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+    <h2 class="text-center mb-4">平台特色</h2>
+    <div class="row">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h5 class="card-title">安全可靠</h5>
+                    <p class="card-text">采用先进的安全技术，保护你的隐私和数据安全。</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-mobile-alt text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h5 class="card-title">多端适配</h5>
+                    <p class="card-text">完美支持电脑、平板和手机，随时随地保持联系。</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-bolt text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h5 class="card-title">实时通讯</h5>
+                    <p class="card-text">采用WebSocket技术，确保消息即时送达。</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-paint-brush text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h5 class="card-title">个性定制</h5>
+                    <p class="card-text">自由设置个人主页背景和简介，展现独特个性。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

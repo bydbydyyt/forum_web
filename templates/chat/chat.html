@@ -1,0 +1,442 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}与 {{ chat_user.username }} 的对话{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: calc(100vh - 200px);
+        display: flex;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .chat-sidebar {
+        width: 300px;
+        border-right: 1px solid #eee;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-header {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        background: #f8f9fa;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+    
+    .chat-input {
+        padding: 1rem;
+        border-top: 1px solid #eee;
+        background: #f8f9fa;
+    }
+    
+    .message {
+        margin-bottom: 1rem;
+        max-width: 70%;
+    }
+    
+    .message-sent {
+        margin-left: auto;
+    }
+    
+    .message-received {
+        margin-right: auto;
+    }
+    
+    .message-content {
+        padding: 0.8rem 1rem;
+        border-radius: 20px;
+        position: relative;
+    }
+    
+    .message-sent .message-content {
+        background: var(--primary-color);
+        color: white;
+        border-radius: 20px 20px 0 20px;
+    }
+    
+    .message-received .message-content {
+        background: #f1f1f1;
+        border-radius: 20px 20px 20px 0;
+    }
+    
+    .message-time {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 0.3rem;
+    }
+    
+    .message-sent .message-time {
+        text-align: right;
+    }
+    
+    .friend-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    .friend-item {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .friend-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .friend-item.active {
+        background-color: #e9ecef;
+    }
+    
+    .friend-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 1rem;
+    }
+    
+    .friend-info {
+        flex: 1;
+    }
+    
+    .friend-name {
+        font-weight: 500;
+        margin-bottom: 0.2rem;
+    }
+    
+    .friend-status {
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .online-status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+    
+    .online-status.online {
+        background-color: #28a745;
+    }
+    
+    .online-status.offline {
+        background-color: #dc3545;
+    }
+    
+    .file-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 10px;
+        margin-top: 0.5rem;
+    }
+    
+    .typing-indicator {
+        padding: 0.5rem 1rem;
+        background: #f1f1f1;
+        border-radius: 20px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+    
+    .typing-indicator span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #666;
+        border-radius: 50%;
+        margin-right: 3px;
+        animation: typing 1s infinite;
+    }
+    
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    
+    @keyframes typing {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-5px);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .chat-sidebar {
+            display: none;
+        }
+        
+        .message {
+            max-width: 85%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- 侧边栏 -->
+    <div class="chat-sidebar">
+        <div class="chat-header">
+            <h5 class="mb-0">我的好友</h5>
+        </div>
+        <div class="friend-list">
+            {% for friendship in friendships %}
+                <div class="friend-item {% if friendship.friend == chat_user %}active{% endif %}"
+                     onclick="location.href='{% url 'chat:chat' friendship.friend.username %}'">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ friendship.friend.avatar.url|default:'/static/img/default-avatar.png' }}" 
+                             alt="{{ friendship.friend.username }}" 
+                             class="friend-avatar">
+                        <div class="friend-info">
+                            <div class="friend-name">{{ friendship.friend.username }}</div>
+                            <div class="friend-status">
+                                <span class="online-status {% if friendship.friend.is_online %}online{% else %}offline{% endif %}"></span>
+                                {% if friendship.friend.is_online %}
+                                    在线
+                                {% else %}
+                                    离线
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">还没有添加任何好友</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- 主聊天区域 -->
+    <div class="chat-main">
+        <div class="chat-header">
+            <div class="d-flex align-items-center">
+                <img src="{{ chat_user.avatar.url|default:'/static/img/default-avatar.png' }}" 
+                     alt="{{ chat_user.username }}" 
+                     class="friend-avatar">
+                <div>
+                    <h5 class="mb-0">{{ chat_user.username }}</h5>
+                    <div class="friend-status">
+                        <span class="online-status {% if chat_user.is_online %}online{% else %}offline{% endif %}"></span>
+                        {% if chat_user.is_online %}
+                            在线
+                        {% else %}
+                            离线
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            {% for message in messages %}
+                <div class="message {% if message.sender == user %}message-sent{% else %}message-received{% endif %}">
+                    <div class="message-content">
+                        {% if message.message_type == 'text' %}
+                            {{ message.content }}
+                        {% elif message.message_type == 'image' %}
+                            <img src="{{ message.file.url }}" alt="图片" class="file-preview">
+                        {% elif message.message_type == 'video' %}
+                            <video src="{{ message.file.url }}" controls class="file-preview"></video>
+                        {% elif message.message_type == 'file' %}
+                            <a href="{{ message.file.url }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-file"></i> 下载文件
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="message-time">
+                        {{ message.created_at|date:"H:i" }}
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <form id="messageForm" class="mb-3">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="messageInput" 
+                           placeholder="输入消息..." autocomplete="off">
+                    <button type="button" class="btn btn-outline-primary" id="fileButton">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        发送
+                    </button>
+                </div>
+                <input type="file" id="fileInput" style="display: none" multiple>
+            </form>
+            
+            <div id="filePreview" class="d-none">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 已选择文件，点击发送按钮上传
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chatSocket = new WebSocket(
+    'ws://' + window.location.host + '/ws/chat/{{ chat_user.username }}/'
+);
+
+chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'chat_message') {
+        appendMessage(data);
+    } else if (data.type === 'typing') {
+        handleTyping(data);
+    }
+};
+
+chatSocket.onclose = function(e) {
+    console.error('Chat socket closed unexpectedly');
+};
+
+document.querySelector('#messageForm').onsubmit = function(e) {
+    e.preventDefault();
+    const messageInput = document.querySelector('#messageInput');
+    const message = messageInput.value;
+    if (message) {
+        chatSocket.send(JSON.stringify({
+            'type': 'chat_message',
+            'message': message
+        }));
+        messageInput.value = '';
+    }
+};
+
+document.querySelector('#fileButton').onclick = function() {
+    document.querySelector('#fileInput').click();
+};
+
+document.querySelector('#fileInput').onchange = function(e) {
+    const files = e.target.files;
+    if (files.length > 0) {
+        const formData = new FormData();
+        for (let file of files) {
+            formData.append('files', file);
+        }
+        
+        fetch('{% url "chat:upload_file" chat_user.username %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                for (let file of data.files) {
+                    chatSocket.send(JSON.stringify({
+                        'type': 'chat_message',
+                        'message_type': file.type,
+                        'file_url': file.url
+                    }));
+                }
+            }
+        });
+    }
+};
+
+function appendMessage(data) {
+    const messages = document.querySelector('#chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${data.is_sent ? 'message-sent' : 'message-received'}`;
+    
+    let content = '';
+    if (data.message_type === 'text') {
+        content = data.message;
+    } else if (data.message_type === 'image') {
+        content = `<img src="${data.file_url}" alt="图片" class="file-preview">`;
+    } else if (data.message_type === 'video') {
+        content = `<video src="${data.file_url}" controls class="file-preview"></video>`;
+    } else if (data.message_type === 'file') {
+        content = `<a href="${data.file_url}" class="btn btn-sm btn-outline-primary">
+                      <i class="fas fa-file"></i> 下载文件
+                  </a>`;
+    }
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            ${content}
+        </div>
+        <div class="message-time">
+            ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}
+        </div>
+    `;
+    
+    messages.appendChild(messageDiv);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+let typingTimeout;
+document.querySelector('#messageInput').oninput = function() {
+    if (!typingTimeout) {
+        chatSocket.send(JSON.stringify({
+            'type': 'typing',
+            'is_typing': true
+        }));
+    }
+    
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+        chatSocket.send(JSON.stringify({
+            'type': 'typing',
+            'is_typing': false
+        }));
+        typingTimeout = null;
+    }, 1000);
+};
+
+function handleTyping(data) {
+    const indicator = document.querySelector('#typingIndicator');
+    if (data.is_typing) {
+        indicator.style.display = 'block';
+    } else {
+        indicator.style.display = 'none';
+    }
+}
+
+// 页面加载完成后滚动到底部
+document.addEventListener('DOMContentLoaded', function() {
+    const messages = document.querySelector('#chatMessages');
+    messages.scrollTop = messages.scrollHeight;
+});
+</script>
+{% endblock %} 

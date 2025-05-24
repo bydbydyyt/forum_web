@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}通知{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>通知</h3>
+                    <button class="btn btn-primary" onclick="markAllRead()">全部标记为已读</button>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for notification in notifications %}
+                        <div class="list-group-item list-group-item-action {% if not notification.is_read %}list-group-item-info{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ notification.message }}</h5>
+                                <small class="text-muted">{{ notification.created_at|date:"Y-m-d H:i" }}</small>
+                            </div>
+                            {% if not notification.is_read %}
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="markRead({{ notification.id }})">
+                                标记为已读
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="alert alert-info">
+                            暂无通知
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function markRead(notificationId) {
+    fetch(`/chat/notifications/${notificationId}/read/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    }).then(response => response.json())
+      .then(data => {
+          if (data.status === 'success') {
+              location.reload();
+          }
+      });
+}
+
+function markAllRead() {
+    fetch('/chat/notifications/read-all/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    }).then(response => response.json())
+      .then(data => {
+          if (data.status === 'success') {
+              location.reload();
+          }
+      });
+}
+</script>
+{% endblock %} 

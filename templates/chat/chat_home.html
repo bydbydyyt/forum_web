@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}私聊{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>私聊</h3>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for friend in friends %}
+                        <a href="{% url 'chat:chat' friend.username %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ friend.username }}</h5>
+                                <small class="text-muted">
+                                    {% if friend.is_online %}
+                                    <span class="badge bg-success">在线</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">离线</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <p class="mb-1">点击开始聊天</p>
+                        </a>
+                        {% empty %}
+                        <div class="alert alert-info">
+                            暂无好友，请先添加好友
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
