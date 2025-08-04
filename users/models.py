@@ -4,6 +4,10 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 import uuid
 
+def generate_friend_code():
+    """生成8位好友代码"""
+    return str(uuid.uuid4())[:8]
+
 class User(AbstractUser):
     """
     自定义用户模型
@@ -14,7 +18,7 @@ class User(AbstractUser):
     avatar = models.ImageField(_('头像'), upload_to='users/avatars/', null=True, blank=True)
     background = models.ImageField(_('背景图片'), upload_to='users/backgrounds/', null=True, blank=True, default='backgrounds/default-background.jpg')
     bio = models.TextField(_('个人简介'), max_length=500, blank=True)
-    friend_code = models.CharField(_('好友代码'), max_length=8, unique=True, default=lambda: str(uuid.uuid4())[:8])
+    friend_code = models.CharField(_('好友代码'), max_length=8, unique=True, default=generate_friend_code)
     
     # 用户名修改相关
     last_username_change = models.DateTimeField(null=True, blank=True, verbose_name='上次修改用户名时间')
@@ -44,7 +48,7 @@ class User(AbstractUser):
     @property
     def like_count(self):
         """获取用户获赞数"""
-        return self.likes.count()
+        return self.liked_posts.count()
         
     @property
     def days_since_joined(self):
