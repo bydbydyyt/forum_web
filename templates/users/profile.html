@@ -5,327 +5,642 @@
 
 {% block extra_css %}
 <style>
-    .profile-header {
-        background-image: url('{% if profile_user.background and profile_user.background.url %}{{ profile_user.background.url }}{% else %}{% static "img/default-background.jpg" %}{% endif %}');
-        background-size: cover;
-        background-position: center;
-        height: 300px;
-        position: relative;
-        margin-bottom: 2rem;
+    :root {
+        --dark-bg: #1a1a2e;
+        --card-bg: #16213e;
+        --accent-color: #0f3460;
+        --text-primary: #ffffff;
+        --text-secondary: #a8a8a8;
+        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     }
-    
-    .profile-info {
+
+    body {
+        background: var(--dark-bg);
+        color: var(--text-primary);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .profile-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        padding: 2rem 0;
+    }
+
+    .profile-header {
+        background: var(--gradient-primary);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
         position: absolute;
-        bottom: 0;
+        top: 0;
         left: 0;
         right: 0;
-        padding: 1rem;
-        background: rgba(0, 0, 0, 0.5);
-        color: white;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
     }
-    
+
+    .profile-info {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+
     .profile-avatar {
-        width: 150px;
-        height: 150px;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
-        border: 4px solid white;
-        margin-top: -75px;
-        background-color: white;
+        border: 4px solid rgba(255, 255, 255, 0.3);
         object-fit: cover;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
     }
-    
+
+    .profile-details h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(45deg, #fff, #e0e0e0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .profile-bio {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
     .profile-stats {
         display: flex;
         gap: 2rem;
+        margin-top: 1.5rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #fff;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .card-modern {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .card-title i {
+        color: #4facfe;
+    }
+
+    .friend-code {
+        background: var(--gradient-accent);
+        padding: 1rem;
+        border-radius: 15px;
         margin-top: 1rem;
     }
-    
-    .profile-stat {
+
+    .friend-code code {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.75rem;
+        border-radius: 10px;
+        color: #fff;
+        font-weight: 600;
+        display: block;
+        margin: 0.5rem 0;
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-modern {
+        background: var(--gradient-primary);
+        border: none;
+        border-radius: 15px;
+        padding: 0.75rem 1.5rem;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
         text-align: center;
     }
-    
-    .profile-stat-value {
-        font-size: 1.5rem;
-        font-weight: bold;
+
+    .btn-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
     }
-    
-    .profile-stat-label {
-        font-size: 0.9rem;
-        color: #666;
+
+    .btn-outline-modern {
+        background: transparent;
+        border: 2px solid #4facfe;
+        color: #4facfe;
+        border-radius: 15px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
     }
-    
-    .profile-tabs {
-        margin-bottom: 2rem;
+
+    .btn-outline-modern:hover {
+        background: #4facfe;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
     }
-    
-    .tab-content {
-        background: white;
-        border-radius: 10px;
-        padding: 2rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .friend-code {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-    }
-    
-    .friend-code code {
-        display: block;
+
+    .tabs-modern {
+        background: var(--card-bg);
+        border-radius: 20px;
         padding: 0.5rem;
-        background: white;
-        border-radius: 0.25rem;
-        margin: 0.5rem 0;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    
+
+    .nav-tabs-modern {
+        border: none;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .nav-link-modern {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        padding: 0.75rem 1.5rem;
+        border-radius: 15px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .nav-link-modern.active {
+        background: var(--gradient-primary);
+        color: white;
+    }
+
+    .nav-link-modern:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .tab-content-modern {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .post-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .post-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
+    }
+
+    .post-title {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-decoration: none;
+    }
+
+    .post-title:hover {
+        color: #4facfe;
+        text-decoration: none;
+    }
+
+    .post-meta {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
     .collection-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .collection-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .collection-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .collection-image {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+    }
+
+    .collection-info {
+        padding: 1.5rem;
+    }
+
+    .collection-title {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .friends-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 1rem;
     }
-    
-    .collection-item {
-        background: white;
-        border-radius: 10px;
-        overflow: hidden;
-        transition: transform 0.3s;
+
+    .friend-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
     }
-    
-    .collection-item:hover {
-        transform: translateY(-5px);
+
+    .friend-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
     }
-    
-    .collection-image {
-        width: 100%;
-        height: 150px;
+
+    .friend-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
         object-fit: cover;
     }
-    
-    .collection-info {
-        padding: 1rem;
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-secondary);
     }
-    
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
     @media (max-width: 768px) {
-        .profile-header {
-            height: 200px;
-        }
-        
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            margin-top: -50px;
+        .content-grid {
+            grid-template-columns: 1fr;
         }
         
         .profile-info {
-            padding: 1rem;
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .profile-stats {
+            justify-content: center;
+        }
+        
+        .profile-header {
+            padding: 2rem 1rem;
+        }
+        
+        .collection-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .friends-grid {
+            grid-template-columns: 1fr;
         }
     }
-
-    .profile-background {
-        height: 200px;
-        background-size: cover;
-        background-position: center;
-        border-radius: 10px;
-        position: relative;
+    
+    /* 添加更多现代化效果 */
+    .profile-container::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -1;
     }
-
-    .profile-avatar-wrapper {
-        position: absolute;
-        bottom: -50px;
-        left: 30px;
+    
+    /* 添加玻璃态效果 */
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
     }
-
-    .profile-avatar {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        border: 4px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    /* 添加悬浮效果 */
+    .hover-lift {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* 添加渐变文字效果 */
+    .gradient-text {
+        background: linear-gradient(45deg, #4facfe, #00f2fe, #667eea);
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradient-shift 3s ease infinite;
+    }
+    
+    @keyframes gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- 个人资料头部 -->
-    <div class="profile-header">
-        <div class="profile-info">
-            <h1>{{ profile_user.username }}</h1>
-            <p class="text-muted">{{ profile_user.bio|default:"这个人很懒，什么都没写" }}</p>
+<div class="profile-container">
+    <div class="container">
+        <!-- 个人资料头部 -->
+        <div class="profile-header">
+            <div class="profile-info">
+                <div class="profile-avatar-wrapper">
+                    {% if profile_user.avatar and profile_user.avatar.url %}
+                        <img src="{{ profile_user.avatar.url }}" class="profile-avatar" alt="头像">
+                    {% else %}
+                        <img src="{% static 'img/default-avatar.png' %}" class="profile-avatar" alt="默认头像">
+                    {% endif %}
+                </div>
+                <div class="profile-details">
+                    <h1 class="gradient-text">{{ profile_user.username }}</h1>
+                    <p class="profile-bio">{{ profile_user.bio|default:"这个人很懒，什么都没写" }}</p>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ profile_user.post_count }}</span>
+                            <span class="stat-label">帖子</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ profile_user.comment_count }}</span>
+                            <span class="stat-label">评论</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ profile_user.like_count }}</span>
+                            <span class="stat-label">获赞</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-3">
-            <!-- 头像 -->
-            <div class="text-center">
-                {% if profile_user.avatar and profile_user.avatar.url %}
-                    <img src="{{ profile_user.avatar.url }}" class="profile-avatar" alt="头像">
+
+        <div class="content-grid">
+            <!-- 左侧边栏 -->
+            <div class="sidebar">
+                <!-- 好友代码 -->
+                {% if user == profile_user %}
+                <div class="card-modern hover-lift">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-friends"></i>
+                        我的好友代码
+                    </h3>
+                    <div class="friend-code">
+                        <code>{{ profile_user.friend_code }}</code>
+                        <button class="btn-modern w-100 mt-2" onclick="copyFriendCode()">
+                            <i class="fas fa-copy"></i> 复制代码
+                        </button>
+                    </div>
+                </div>
                 {% else %}
-                    <img src="{% static 'img/default-avatar.png' %}" class="profile-avatar" alt="默认头像">
-                {% endif %}
-            </div>
-            
-            <!-- 统计信息 -->
-            <div class="profile-stats">
-                <div class="profile-stat">
-                    <div class="profile-stat-value">{{ profile_user.post_count }}</div>
-                    <div class="profile-stat-label">帖子</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="profile-stat-value">{{ profile_user.comment_count }}</div>
-                    <div class="profile-stat-label">评论</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="profile-stat-value">{{ profile_user.like_count }}</div>
-                    <div class="profile-stat-label">获赞</div>
-                </div>
-            </div>
-            
-            <!-- 好友代码 -->
-            {% if user == profile_user %}
-            <div class="friend-code">
-                <h5>我的好友代码</h5>
-                <code>{{ profile_user.friend_code }}</code>
-                <button class="btn btn-sm btn-outline-primary mt-2" onclick="copyFriendCode()">
-                    复制代码
-                </button>
-            </div>
-            {% else %}
-            <div class="mt-3">
-                {% if is_friend %}
-                    <a href="{% url 'chat:chat' profile_user.username %}" class="btn btn-primary w-100">
-                        发送消息
-                    </a>
-                {% else %}
-                    <button class="btn btn-outline-primary w-100" onclick="sendFriendRequest()">
+                <div class="card-modern hover-lift">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-plus"></i>
                         添加好友
-                    </button>
+                    </h3>
+                    {% if is_friend %}
+                        <a href="{% url 'chat:chat' profile_user.username %}" class="btn-modern w-100">
+                            <i class="fas fa-comments"></i> 发送消息
+                        </a>
+                    {% else %}
+                        <button class="btn-outline-modern w-100" onclick="sendFriendRequest()">
+                            <i class="fas fa-user-plus"></i> 添加好友
+                        </button>
+                    {% endif %}
+                </div>
                 {% endif %}
-            </div>
-            {% endif %}
-            
-            <!-- 操作按钮 -->
-            {% if user == profile_user %}
-            <div class="mt-3">
-                <a href="{% url 'users:settings' %}" class="btn btn-primary btn-block">编辑资料</a>
-            </div>
-            {% endif %}
-            
-            <!-- 注册信息 -->
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h5 class="card-title">注册信息</h5>
-                    <p class="card-text">
-                        <i class="fas fa-calendar-alt"></i> 
+
+                <!-- 编辑资料 -->
+                {% if user == profile_user %}
+                <div class="card-modern hover-lift">
+                    <h3 class="card-title">
+                        <i class="fas fa-edit"></i>
+                        个人设置
+                    </h3>
+                    <a href="{% url 'users:settings' %}" class="btn-modern w-100">
+                        <i class="fas fa-cog"></i> 编辑资料
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- 注册信息 -->
+                <div class="card-modern hover-lift">
+                    <h3 class="card-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        注册信息
+                    </h3>
+                    <p class="text-secondary mb-2">
+                        <i class="fas fa-clock"></i> 
                         注册于 {{ profile_user.date_joined|date:"Y-m-d" }}
-                        <br>
-                        <small class="text-muted">已加入 {{ profile_user.days_since_joined }} 天</small>
+                    </p>
+                    <p class="text-secondary">
+                        <i class="fas fa-calendar-check"></i> 
+                        已加入 {{ profile_user.days_since_joined }} 天
                     </p>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-md-9">
-            <ul class="nav nav-tabs profile-tabs" id="profileTabs" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" id="posts-tab" data-bs-toggle="tab" href="#posts">
-                        我的帖子
-                    </a>
-                </li>
-                {% if profile_user.show_collections or user == profile_user %}
-                    <li class="nav-item">
-                        <a class="nav-link" id="collections-tab" data-bs-toggle="tab" href="#collections">
-                            我的收藏
-                        </a>
-                    </li>
-                {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link" id="friends-tab" data-bs-toggle="tab" href="#friends">
-                        我的好友
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="tab-content" id="profileTabContent">
-                <div class="tab-pane fade show active" id="posts">
-                    {% for post in posts %}
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <a href="{% url 'forum:post_detail' post.id %}" class="text-decoration-none">
+
+            <!-- 右侧内容 -->
+            <div class="main-content">
+                <!-- 标签页 -->
+                <div class="tabs-modern">
+                    <ul class="nav nav-tabs-modern" id="profileTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link-modern active" id="posts-tab" data-bs-toggle="tab" href="#posts">
+                                <i class="fas fa-file-alt"></i> 我的帖子
+                            </a>
+                        </li>
+                        {% if profile_user.show_collections or user == profile_user %}
+                        <li class="nav-item">
+                            <a class="nav-link-modern" id="collections-tab" data-bs-toggle="tab" href="#collections">
+                                <i class="fas fa-bookmark"></i> 我的收藏
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link-modern" id="friends-tab" data-bs-toggle="tab" href="#friends">
+                                <i class="fas fa-user-friends"></i> 我的好友
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 标签页内容 -->
+                <div class="tab-content-modern" id="profileTabContent">
+                    <!-- 帖子标签页 -->
+                    <div class="tab-pane fade show active" id="posts">
+                        {% for post in posts %}
+                            <div class="post-item hover-lift">
+                                <h5 class="post-title">
+                                    <a href="{% url 'forum:post_detail' post.id %}">
                                         {{ post.title }}
                                     </a>
                                 </h5>
-                                <p class="card-text">{{ post.content|truncatewords:50 }}</p>
-                                <div class="text-muted">
-                                    <small>
+                                <p class="text-secondary mb-2">{{ post.content|truncatewords:30 }}</p>
+                                <div class="post-meta">
+                                    <span class="meta-item">
                                         <i class="fas fa-clock"></i> {{ post.created_at|timesince }}前
-                                        <i class="fas fa-eye ms-2"></i> {{ post.view_count }}
-                                        <i class="fas fa-heart ms-2"></i> {{ post.like_count }}
-                                        <i class="fas fa-comments ms-2"></i> {{ post.comment_count }}
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">还没有发布任何帖子</p>
-                        </div>
-                    {% endfor %}
-                </div>
-                
-                {% if profile_user.show_collections or user == profile_user %}
-                    <div class="tab-pane fade" id="collections">
-                        <div class="collection-grid">
-                            {% for collection in collections %}
-                                <div class="collection-item">
-                                    <img src="{% if collection.post.images.first and collection.post.images.first.image.url %}{{ collection.post.images.first.image.url }}{% else %}{% static 'img/default-post.jpg' %}{% endif %}" 
-                                         alt="{{ collection.post.title }}" class="collection-image">
-                                    <div class="collection-info">
-                                        <h5>{{ collection.post.title }}</h5>
-                                        <p class="text-muted mb-0">
-                                            <small>收藏于 {{ collection.created_at|timesince }}前</small>
-                                        </p>
-                                    </div>
-                                </div>
-                            {% empty %}
-                                <div class="text-center py-5">
-                                    <i class="fas fa-bookmark fa-3x text-muted mb-3"></i>
-                                    <p class="text-muted">还没有收藏任何帖子</p>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-                
-                <div class="tab-pane fade" id="friends">
-                    <div class="row">
-                        {% for friendship in friendships %}
-                            <div class="col-md-4 mb-3">
-                                <div class="card">
-                                    <div class="card-body d-flex align-items-center">
-                                        <img src="{% if friendship.friend.avatar and friendship.friend.avatar.url %}{{ friendship.friend.avatar.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
-                                             alt="{{ friendship.friend.username }}" 
-                                             class="rounded-circle me-3" width="50" height="50">
-                                        <div>
-                                            <h6 class="mb-0">{{ friendship.friend.username }}</h6>
-                                            <small class="text-muted">
-                                                好友 {{ friendship.created_at|timesince }}
-                                            </small>
-                                        </div>
-                                    </div>
+                                    </span>
+                                    <span class="meta-item">
+                                        <i class="fas fa-eye"></i> {{ post.view_count }}
+                                    </span>
+                                    <span class="meta-item">
+                                        <i class="fas fa-heart"></i> {{ post.like_count }}
+                                    </span>
+                                    <span class="meta-item">
+                                        <i class="fas fa-comments"></i> {{ post.comment_count }}
+                                    </span>
                                 </div>
                             </div>
                         {% empty %}
-                            <div class="text-center py-5">
-                                <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">还没有添加任何好友</p>
+                            <div class="empty-state">
+                                <i class="fas fa-file-alt"></i>
+                                <p>还没有发布任何帖子</p>
                             </div>
                         {% endfor %}
+                    </div>
+                    
+                    {% if profile_user.show_collections or user == profile_user %}
+                        <div class="tab-pane fade" id="collections">
+                            <div class="collection-grid">
+                                {% for collection in collections %}
+                                    <div class="collection-item hover-lift">
+                                        <img src="{% if collection.post.images.first and collection.post.images.first.image.url %}{{ collection.post.images.first.image.url }}{% else %}{% static 'img/default-post.jpg' %}{% endif %}" 
+                                             alt="{{ collection.post.title }}" class="collection-image">
+                                        <div class="collection-info">
+                                            <h5 class="collection-title">{{ collection.post.title }}</h5>
+                                            <p class="text-secondary mb-0">
+                                                <small>收藏于 {{ collection.created_at|timesince }}前</small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="empty-state">
+                                        <i class="fas fa-bookmark"></i>
+                                        <p>还没有收藏任何帖子</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="tab-pane fade" id="friends">
+                        <div class="friends-grid">
+                            {% for friendship in friendships %}
+                                <div class="friend-item hover-lift">
+                                    <img src="{% if friendship.friend.avatar and friendship.friend.avatar.url %}{{ friendship.friend.avatar.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
+                                         alt="{{ friendship.friend.username }}" 
+                                         class="friend-avatar">
+                                    <div>
+                                        <h6 class="mb-0 text-white">{{ friendship.friend.username }}</h6>
+                                        <small class="text-secondary">
+                                            好友 {{ friendship.created_at|timesince }}
+                                        </small>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="empty-state">
+                                    <i class="fas fa-user-friends"></i>
+                                    <p>还没有添加任何好友</p>
+                                </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -336,10 +651,33 @@
 
 {% block extra_js %}
 <script>
+// 获取CSRF token
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                  document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
 function copyFriendCode() {
     const friendCode = document.querySelector('.friend-code code').textContent;
     navigator.clipboard.writeText(friendCode).then(() => {
-        alert('好友代码已复制到剪贴板！');
+        // 创建临时提示
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--gradient-accent);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        `;
+        notification.textContent = '✅ 好友代码已复制到剪贴板！';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
     }).catch(err => {
         console.error('复制失败:', err);
     });
@@ -355,7 +693,27 @@ function sendFriendRequest() {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            alert('好友请求已发送');
+            // 创建成功提示
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--gradient-primary);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            `;
+            notification.textContent = '✅ 好友请求已发送！';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         } else {
             alert(data.message);
         }
@@ -364,5 +722,33 @@ function sendFriendRequest() {
         alert('发送好友请求失败');
     });
 }
+
+// 添加动画样式
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .meta-item {
+        display: inline-block;
+        margin-right: 1rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    .meta-item i {
+        margin-right: 0.25rem;
+        color: #4facfe;
+    }
+`;
+document.head.appendChild(style);
 </script>
-{% endblock %} 
+{% endblock %}
