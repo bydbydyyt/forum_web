@@ -28,4 +28,5 @@ urlpatterns = [
     path('profile/<str:username>/', views.profile, name='profile'),
     path('settings/', views.settings, name='settings'),
     path('change-username/', views.change_username, name='change_username'),
+    path('update-background/', views.update_background, name='update_background'),
 ] 

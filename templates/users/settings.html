@@ -4,6 +4,177 @@
 
 {% block title %}个人设置 - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .background-preview {
+        width: 100%;
+        height: 200px;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin-bottom: 1rem;
+    }
+    
+    .background-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .background-preview .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .preset-backgrounds {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .preset-background {
+        width: 100%;
+        height: 100px;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .preset-background:hover {
+        transform: scale(1.05);
+        border-color: #007bff;
+    }
+    
+    .preset-background.selected {
+        border-color: #007bff;
+        box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    }
+    
+    .preset-background img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .upload-area {
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .upload-area:hover {
+        border-color: #007bff;
+        background: #e3f2fd;
+    }
+    
+    .upload-area.dragover {
+        border-color: #007bff;
+        background: #e3f2fd;
+    }
+    
+    .crop-container {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .crop-modal {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        max-width: 90%;
+        max-height: 90%;
+        overflow: auto;
+    }
+    
+    .crop-preview {
+        max-width: 100%;
+        max-height: 400px;
+        border: 1px solid #dee2e6;
+    }
+
+    /* 背景尺寸选择样式 */
+    .size-options {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .size-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 1rem;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .size-option:hover {
+        transform: scale(1.05);
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #007bff;
+    }
+
+    .size-option.selected {
+        border: 3px solid #007bff;
+        box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+        background: rgba(0, 123, 255, 0.1);
+    }
+
+    .size-preview {
+        width: 100px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .size-preview.wide {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .size-preview.square {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .size-preview.tall {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .size-preview.ultra-wide {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="row">
@@ -14,6 +185,7 @@
                     <h5 class="card-title">设置</h5>
                     <div class="nav flex-column nav-pills">
                         <a class="nav-link active" href="#profile" data-bs-toggle="pill">个人资料</a>
+                        <a class="nav-link" href="#background" data-bs-toggle="pill">背景设置</a>
                         <a class="nav-link" href="#security" data-bs-toggle="pill">账号安全</a>
                         <a class="nav-link" href="#notification" data-bs-toggle="pill">通知设置</a>
                     </div>
@@ -44,6 +216,92 @@
                                     修改用户名
                                 </a>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 背景设置 -->
+                <div class="tab-pane fade" id="background">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h4 class="card-title">背景图片设置</h4>
+                            
+                            <!-- 当前背景预览 -->
+                            <div class="mb-4">
+                                <h5>当前背景</h5>
+                                <div class="background-preview">
+                                    {% if user.background %}
+                                        <img src="{{ user.background.url }}" alt="当前背景" id="currentBackground">
+                                    {% else %}
+                                        <div class="overlay">
+                                            <span>暂无背景图片</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- 上传新背景 -->
+                            <div class="mb-4">
+                                <h5>上传新背景</h5>
+                                
+                                <!-- 背景尺寸选择 -->
+                                <div class="mb-3">
+                                    <label class="form-label">背景尺寸</label>
+                                    <div class="size-options">
+                                        <div class="size-option" data-size="1200x400">
+                                            <div class="size-preview wide"></div>
+                                            <span>宽屏 (1200x400)</span>
+                                        </div>
+                                        <div class="size-option" data-size="800x600">
+                                            <div class="size-preview square"></div>
+                                            <span>方形 (800x600)</span>
+                                        </div>
+                                        <div class="size-option" data-size="600x800">
+                                            <div class="size-preview tall"></div>
+                                            <span>竖屏 (600x800)</span>
+                                        </div>
+                                        <div class="size-option" data-size="1000x300">
+                                            <div class="size-preview ultra-wide"></div>
+                                            <span>超宽 (1000x300)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="upload-area" id="uploadArea">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <h6>拖拽图片到此处或点击上传</h6>
+                                    <p class="text-muted">支持 JPG, PNG, GIF 格式，建议尺寸 <span id="recommendedSize">1200x400</span> 像素</p>
+                                    <input type="file" id="backgroundFile" accept="image/*" style="display: none;">
+                                </div>
+                            </div>
+                            
+                            <!-- 预设背景 -->
+                            <div class="mb-4">
+                                <h5>预设背景</h5>
+                                <div class="preset-backgrounds">
+                                    <div class="preset-background" data-preset="gradient1">
+                                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%;"></div>
+                                    </div>
+                                    <div class="preset-background" data-preset="gradient2">
+                                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); height: 100%;"></div>
+                                    </div>
+                                    <div class="preset-background" data-preset="gradient3">
+                                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); height: 100%;"></div>
+                                    </div>
+                                    <div class="preset-background" data-preset="gradient4">
+                                        <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); height: 100%;"></div>
+                                    </div>
+                                    <div class="preset-background" data-preset="gradient5">
+                                        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); height: 100%;"></div>
+                                    </div>
+                                    <div class="preset-background" data-preset="gradient6">
+                                        <div style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); height: 100%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 保存按钮 -->
+                            <button type="button" class="btn btn-primary" id="saveBackground">保存背景设置</button>
                         </div>
                     </div>
                 </div>
@@ -86,4 +344,202 @@
         </div>
     </div>
 </div>
+
+<!-- 图片裁剪模态框 -->
+<div class="crop-container" id="cropContainer">
+    <div class="crop-modal">
+        <h5>裁剪背景图片</h5>
+        <p class="text-muted">调整图片以适合背景显示</p>
+        <div class="crop-preview" id="cropPreview"></div>
+        <div class="mt-3">
+            <button type="button" class="btn btn-primary" id="cropSave">保存裁剪</button>
+            <button type="button" class="btn btn-secondary" id="cropCancel">取消</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const backgroundFile = document.getElementById('backgroundFile');
+    const cropContainer = document.getElementById('cropContainer');
+    const cropPreview = document.getElementById('cropPreview');
+    const cropSave = document.getElementById('cropSave');
+    const cropCancel = document.getElementById('cropCancel');
+    const saveBackground = document.getElementById('saveBackground');
+    const presetBackgrounds = document.querySelectorAll('.preset-background');
+    const sizeOptions = document.querySelectorAll('.size-option');
+    const recommendedSizeSpan = document.getElementById('recommendedSize');
+    
+    let cropper = null;
+    let selectedFile = null;
+    let selectedPreset = null;
+    let selectedSize = '1200x400'; // 默认尺寸
+    
+    // 文件上传处理
+    uploadArea.addEventListener('click', () => backgroundFile.click());
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+    
+    backgroundFile.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    // 尺寸选项点击处理
+    sizeOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            sizeOptions.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            selectedSize = option.dataset.size;
+            recommendedSizeSpan.textContent = selectedSize;
+        });
+    });
+    
+    // 默认选择第一个尺寸选项
+    sizeOptions[0].classList.add('selected');
+    
+    function handleFile(file) {
+        if (!file.type.startsWith('image/')) {
+            alert('请选择图片文件');
+            return;
+        }
+        
+        selectedFile = file;
+        selectedPreset = null;
+        
+        // 清除预设选择
+        presetBackgrounds.forEach(preset => preset.classList.remove('selected'));
+        
+        // 显示裁剪界面
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            cropPreview.innerHTML = `<img src="${e.target.result}" style="max-width: 100%;">`;
+            cropContainer.style.display = 'flex';
+            
+            // 初始化裁剪器
+            if (cropper) {
+                cropper.destroy();
+            }
+            
+            const image = cropPreview.querySelector('img');
+            cropper = new Cropper(image, {
+                aspectRatio: parseInt(selectedSize.split('x')[0]) / parseInt(selectedSize.split('x')[1]),
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // 预设背景选择
+    presetBackgrounds.forEach(preset => {
+        preset.addEventListener('click', () => {
+            // 清除文件选择
+            selectedFile = null;
+            backgroundFile.value = '';
+            
+            // 更新选择状态
+            presetBackgrounds.forEach(p => p.classList.remove('selected'));
+            preset.classList.add('selected');
+            selectedPreset = preset.dataset.preset;
+            
+            // 更新推荐尺寸显示
+            recommendedSizeSpan.textContent = selectedSize;
+        });
+    });
+    
+    // 裁剪保存
+    cropSave.addEventListener('click', () => {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas({
+                width: parseInt(selectedSize.split('x')[0]),
+                height: parseInt(selectedSize.split('x')[1])
+            });
+            
+            canvas.toBlob((blob) => {
+                selectedFile = new File([blob], 'background.jpg', { type: 'image/jpeg' });
+                cropContainer.style.display = 'none';
+                cropper.destroy();
+                cropper = null;
+            }, 'image/jpeg', 0.9);
+        }
+    });
+    
+    // 裁剪取消
+    cropCancel.addEventListener('click', () => {
+        cropContainer.style.display = 'none';
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        selectedFile = null;
+    });
+    
+    // 保存背景设置
+    saveBackground.addEventListener('click', () => {
+        if (!selectedFile && !selectedPreset) {
+            alert('请选择背景图片或预设');
+            return;
+        }
+        
+        const formData = new FormData();
+        if (selectedFile) {
+            formData.append('background', selectedFile);
+        }
+        if (selectedPreset) {
+            formData.append('preset_background', selectedPreset);
+        }
+        formData.append('size', selectedSize); // 添加尺寸到表单数据
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch('{% url "users:update_background" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('背景设置已保存！');
+                location.reload();
+            } else {
+                alert('保存失败：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('保存失败，请重试');
+        });
+    });
+});
+</script>
 {% endblock %} 
