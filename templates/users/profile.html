@@ -590,6 +590,23 @@
                         已加入 {{ profile_user.days_since_joined }} 天
                     </p>
                 </div>
+
+                <!-- 好友代码 -->
+                <div class="card-modern hover-lift">
+                    <h3 class="card-title">
+                        <i class="fas fa-qrcode"></i>
+                        好友代码
+                    </h3>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="text-primary mb-1">{{ profile_user.friend_code }}</h5>
+                            <small class="text-muted">可通过此代码添加好友</small>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="copyProfileFriendCode()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- 右侧内容 -->
@@ -736,6 +753,36 @@ function copyFriendCode() {
         }, 3000);
     }).catch(err => {
         console.error('复制失败:', err);
+    });
+}
+
+function copyProfileFriendCode() {
+    const friendCode = '{{ profile_user.friend_code }}';
+    navigator.clipboard.writeText(friendCode).then(() => {
+        // 创建临时提示
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--gradient-accent);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        `;
+        notification.textContent = '✅ 好友代码已复制到剪贴板！';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }).catch(err => {
+        console.error('复制失败:', err);
+        alert('复制失败，请手动复制好友代码：' + friendCode);
     });
 }
 

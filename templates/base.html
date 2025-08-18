@@ -31,6 +31,13 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'chat:home' %}">私聊</a>
                     </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'chat:friends_list' %}">
+                            <i class="fas fa-users"></i> 好友
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <!-- 搜索框 -->
                 <form class="d-flex me-3" action="{% url 'forum:home' %}" method="get">
@@ -51,6 +58,9 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{% url 'users:profile' user.username %}">个人主页</a></li>
+                                <li><a class="dropdown-item" href="{% url 'chat:notifications' %}">
+                                    <i class="fas fa-bell"></i> 通知
+                                </a></li>
                                 <li><a class="dropdown-item" href="{% url 'users:settings' %}">设置</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'users:logout' %}">退出</a></li>
@@ -96,4 +106,4 @@
     <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
-</html> 
+</html>

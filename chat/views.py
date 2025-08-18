@@ -156,3 +156,40 @@ def mark_notification_read(request, notification_id):
 def mark_all_notifications_read(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     return JsonResponse({'status': 'success'})
+
+@login_required
+def friends_list(request):
+    """好友列表页面"""
+    # 获取已接受的好友关系
+    friendships = Friendship.objects.filter(user=request.user, is_accepted=True)
+    friends = [friendship.friend for friendship in friendships]
+    
+    # 获取待处理的好友请求（别人发给我的）
+    pending_requests = Friendship.objects.filter(friend=request.user, is_accepted=False)
+    
+    # 获取我发出的待处理请求
+    sent_requests = Friendship.objects.filter(user=request.user, is_accepted=False)
+    
+    # 搜索用户功能 - 支持用户名和好友代码
+    search_query = request.GET.get('search', '')
+    search_results = []
+    if search_query:
+        # 先尝试通过好友代码精确匹配
+        try:
+            user_by_code = User.objects.get(friend_code=search_query)
+            if user_by_code.id != request.user.id:
+                search_results = [user_by_code]
+        except User.DoesNotExist:
+            # 如果好友代码没找到，则通过用户名模糊搜索
+            search_results = User.objects.filter(
+                username__icontains=search_query
+            ).exclude(id=request.user.id)[:10]
+    
+    context = {
+        'friends': friends,
+        'pending_requests': pending_requests,
+        'sent_requests': sent_requests,
+        'search_query': search_query,
+        'search_results': search_results,
+    }
+    return render(request, 'chat/friends_list.html', context)
