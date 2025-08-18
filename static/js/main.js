@@ -1,9 +1,21 @@
 // 全局变量
-const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
+const csrfToken = csrfTokenElement ? csrfTokenElement.value : '';
 
 // 工具函数
 function formatDate(dateString) {
+    // 检查输入是否有效
+    if (!dateString) {
+        return '刚刚';
+    }
+    
     const date = new Date(dateString);
+    
+    // 检查日期是否有效
+    if (isNaN(date.getTime())) {
+        return '刚刚';
+    }
+    
     const now = new Date();
     const diff = now - date;
     
@@ -150,13 +162,18 @@ class WebSocketClient {
     
     handleChatMessage(message) {
         // 在聊天界面添加新消息
+        // 检查是否在聊天页面，如果是则跳过处理（由chat.html中的appendMessage处理）
+        if (window.location.pathname.includes('/chat/') && window.location.pathname !== '/chat/') {
+            return; // 在具体聊天页面时不处理，避免重复显示
+        }
+        
         const chatMessages = document.querySelector('.chat-messages');
         if (chatMessages) {
             const messageElement = document.createElement('div');
             messageElement.className = `message ${message.is_sent ? 'message-sent' : 'message-received'} fade-in`;
             messageElement.innerHTML = `
                 <div class="message-content">
-                    <div class="message-text">${message.content}</div>
+                    <div class="message-text">${message.message}</div>
                     <div class="message-time">${formatDate(message.created_at)}</div>
                 </div>
             `;
@@ -182,10 +199,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 初始化WebSocket连接
-    const wsUrl = `ws://${window.location.host}/ws/chat/`;
-    const wsClient = new WebSocketClient(wsUrl);
-    wsClient.connect();
+    // 只在聊天页面初始化WebSocket连接
+    if (window.location.pathname.startsWith('/chat/') && window.location.pathname !== '/chat/') {
+        // 从URL中提取用户名
+        const pathParts = window.location.pathname.split('/');
+        const username = pathParts[pathParts.length - 2]; // 获取倒数第二个部分作为用户名
+        if (username) {
+            const wsUrl = `ws://${window.location.host}/ws/chat/${username}/`;
+            const wsClient = new WebSocketClient(wsUrl);
+            wsClient.connect();
+        }
+    }
     
     // 初始化无限滚动
     const scrollContainers = document.querySelectorAll('.infinite-scroll');
@@ -198,4 +222,4 @@ document.addEventListener('DOMContentLoaded', function() {
             // ...
         });
     });
-}); 
+});

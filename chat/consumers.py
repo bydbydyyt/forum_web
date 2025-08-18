@@ -42,7 +42,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             
             # 保存消息到数据库
             room = await self.get_room()
-            await self.save_message(room, sender, message)
+            saved_message = await self.save_message(room, sender, message)
             
             # 发送消息到聊天室组
             await self.channel_layer.group_send(
@@ -50,7 +50,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     'type': 'chat_message',
                     'message': message,
-                    'sender': sender.username
+                    'sender': sender.username,
+                    'created_at': saved_message.created_at.isoformat(),
+                    'is_sent': True
                 }
             )
             
@@ -68,10 +70,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
     async def chat_message(self, event):
+        # 判断当前用户是否为消息发送者
+        current_user = self.scope['user']
+        is_sent = current_user.username == event['sender']
+        
         await self.send(text_data=json.dumps({
             'type': 'chat_message',
             'message': event['message'],
-            'sender': event['sender']
+            'sender': event['sender'],
+            'created_at': event.get('created_at'),
+            'is_sent': is_sent
         }))
 
     async def typing(self, event):
@@ -90,7 +98,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_room(self):
-        return ChatRoom.objects.get(name=self.room_name)
+        room, created = ChatRoom.objects.get_or_create(name=self.room_name)
+        # 如果是新创建的聊天室，添加当前用户为参与者
+        if created:
+            room.participants.add(self.scope['user'])
+        # 确保当前用户在聊天室的参与者列表中
+        elif not room.participants.filter(id=self.scope['user'].id).exists():
+            room.participants.add(self.scope['user'])
+        return room
 
     @database_sync_to_async
     def save_message(self, room, sender, content):
@@ -113,4 +128,4 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message=f'{sender.username} 发送了新消息: {message[:50]}...',
                 notification_type='message',
                 related_user=sender
-            ) 
+            )

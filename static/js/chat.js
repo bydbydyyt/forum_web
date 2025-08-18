@@ -1,4 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // 从URL中提取用户名作为房间名
+    const pathParts = window.location.pathname.split('/');
+    const roomName = pathParts[pathParts.length - 2]; // 获取倒数第二个部分作为用户名
+    
+    if (!roomName) {
+        console.error('无法获取房间名称，WebSocket连接未建立');
+        return;
+    }
+    
     const chatSocket = new WebSocket(
         'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
     );
@@ -164,4 +173,4 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebar.classList.toggle('show');
         };
     }
-}); 
+});

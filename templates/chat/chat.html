@@ -1011,10 +1011,31 @@
 
 {% block extra_js %}
 <script>
+// 使用全局的csrfToken变量（在main.js中已声明）
+
 // WebSocket连接
+{% if chat_user and chat_user.username %}
 const chatSocket = new WebSocket(
     'ws://' + window.location.host + '/ws/chat/{{ chat_user.username }}/'
 );
+{% else %}
+const chatSocket = null;
+console.error('Chat user not found, WebSocket connection not established');
+{% endif %}
+
+// WebSocket连接状态检查
+function isWebSocketReady() {
+    return chatSocket && chatSocket.readyState === WebSocket.OPEN;
+}
+
+// 安全发送WebSocket消息
+function safeSendWebSocket(data) {
+    if (isWebSocketReady()) {
+        chatSocket.send(JSON.stringify(data));
+    } else {
+        console.warn('WebSocket not ready, message not sent:', data);
+    }
+}
 
 chatSocket.onmessage = function(e) {
     const data = JSON.parse(e.data);
@@ -1035,10 +1056,10 @@ document.querySelector('#messageForm').onsubmit = function(e) {
     const messageInput = document.querySelector('#messageInput');
     const message = messageInput.value.trim();
     if (message) {
-        chatSocket.send(JSON.stringify({
+        safeSendWebSocket({
             'type': 'chat_message',
             'message': message
-        }));
+        });
         messageInput.value = '';
         autoResize(messageInput);
         updateSendButton();
@@ -1079,12 +1100,12 @@ function handleFileUpload(input, fileType) {
             .then(data => {
                 if (data.status === 'success') {
                     for (let file of data.files) {
-                        chatSocket.send(JSON.stringify({
+                        safeSendWebSocket({
                             'type': 'chat_message',
                             'message_type': file.type,
                             'file_url': file.url,
                             'file_name': file.name
-                        }));
+                        });
                     }
                 }
             })
@@ -1107,9 +1128,7 @@ function appendMessage(data) {
     messageDiv.className = `message ${data.is_sent ? 'message-sent' : 'message-received'}`;
     
     let content = '';
-    if (data.message_type === 'text') {
-        content = data.message;
-    } else if (data.message_type === 'emoji') {
+    if (data.message_type === 'emoji') {
         content = `<span class="emoji-message">${data.message}</span>`;
     } else if (data.message_type === 'image') {
         content = `<img src="${data.file_url}" alt="图片" class="image-message" onclick="previewImage('${data.file_url}')">`;  
@@ -1127,6 +1146,9 @@ function appendMessage(data) {
                 </div>
             </a>
         `;
+    } else {
+        // 默认处理文本消息（包括没有message_type的情况）
+        content = data.message || '';
     }
     
     const avatarUrl = data.is_sent ?
@@ -1166,7 +1188,7 @@ function appendMessage(data) {
                 ${content}
             </div>
             <div class="message-time">
-                ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}
+                ${data.created_at ? formatDate(data.created_at) : new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}
                 ${statusHtml}
             </div>
         </div>
@@ -1222,18 +1244,18 @@ document.querySelector('#messageInput').oninput = function() {
     updateSendButton();
     
     if (!typingTimeout) {
-        chatSocket.send(JSON.stringify({
+        safeSendWebSocket({
             'type': 'typing',
             'is_typing': true
-        }));
+        });
     }
     
     clearTimeout(typingTimeout);
     typingTimeout = setTimeout(() => {
-        chatSocket.send(JSON.stringify({
+        safeSendWebSocket({
             'type': 'typing',
             'is_typing': false
-        }));
+        });
         typingTimeout = null;
     }, 1000);
 };
@@ -1541,12 +1563,12 @@ function handleDraggedFiles(files) {
             const data = JSON.parse(xhr.responseText);
             if (data.status === 'success') {
                 data.files.forEach(file => {
-                    chatSocket.send(JSON.stringify({
+                    safeSendWebSocket({
                         'type': 'chat_message',
                         'message_type': file.type,
                         'file_url': file.url,
                         'file_name': file.name
-                    }));
+                    });
                 });
             }
         }
