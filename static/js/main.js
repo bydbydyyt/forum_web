@@ -203,9 +203,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.location.pathname.startsWith('/chat/') && window.location.pathname !== '/chat/') {
         // 从URL中提取用户名
         const pathParts = window.location.pathname.split('/');
-        const username = pathParts[pathParts.length - 2]; // 获取倒数第二个部分作为用户名
-        if (username) {
-            const wsUrl = `ws://${window.location.host}/ws/chat/${username}/`;
+        const chatUsername = pathParts[pathParts.length - 2]; // 获取倒数第二个部分作为用户名
+        
+        // 获取当前用户名（从页面中获取）
+        const currentUserElement = document.querySelector('[data-current-user]');
+        const currentUsername = currentUserElement ? currentUserElement.dataset.currentUser : null;
+        
+        if (chatUsername && currentUsername) {
+            // 生成聊天室名称（与后端逻辑保持一致）
+            const roomName = [currentUsername, chatUsername].sort().join('_');
+            const wsUrl = `ws://${window.location.host}/ws/chat/${roomName}/`;
             const wsClient = new WebSocketClient(wsUrl);
             wsClient.connect();
         }

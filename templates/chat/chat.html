@@ -813,7 +813,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="wechat-container">
+<div class="wechat-container" data-current-user="{{ user.username }}">
     <!-- 左侧边栏 -->
     <div class="wechat-sidebar">
         <div class="sidebar-header">
@@ -1015,8 +1015,12 @@
 
 // WebSocket连接
 {% if chat_user and chat_user.username %}
+// 生成聊天室名称（与后端逻辑保持一致）
+const currentUser = '{{ user.username }}';
+const chatUser = '{{ chat_user.username }}';
+const roomName = [currentUser, chatUser].sort().join('_');
 const chatSocket = new WebSocket(
-    'ws://' + window.location.host + '/ws/chat/{{ chat_user.username }}/'
+    'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
 );
 {% else %}
 const chatSocket = null;

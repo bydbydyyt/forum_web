@@ -129,3 +129,109 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 notification_type='message',
                 related_user=sender
             )
+
+
+class NotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.user = self.scope['user']
+        if not self.user.is_authenticated:
+            await self.close()
+            return
+            
+        self.group_name = f'notifications_{self.user.id}'
+        
+        # 加入用户通知组
+        await self.channel_layer.group_add(
+            self.group_name,
+            self.channel_name
+        )
+        
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # 离开用户通知组
+        await self.channel_layer.group_discard(
+            self.group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        message_type = text_data_json.get('type')
+        
+        if message_type == 'notification_read':
+            notification_id = text_data_json.get('notification_id')
+            await self.mark_notification_read(notification_id)
+
+    async def new_notification(self, event):
+        # 发送新通知到客户端
+        await self.send(text_data=json.dumps({
+            'type': 'new_notification',
+            'notification': event['notification']
+        }))
+
+    @database_sync_to_async
+    def mark_notification_read(self, notification_id):
+        try:
+            notification = Notification.objects.get(id=notification_id, user=self.user)
+            notification.is_read = True
+            notification.save()
+        except Notification.DoesNotExist:
+            pass
+
+
+class FriendsConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.user = self.scope['user']
+        if not self.user.is_authenticated:
+            await self.close()
+            return
+            
+        self.group_name = f'friends_{self.user.id}'
+        
+        # 加入用户好友组
+        await self.channel_layer.group_add(
+            self.group_name,
+            self.channel_name
+        )
+        
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # 离开用户好友组
+        await self.channel_layer.group_discard(
+            self.group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        message_type = text_data_json.get('type')
+        
+        if message_type == 'friend_request':
+            target_username = text_data_json.get('target_username')
+            await self.send_friend_request(target_username)
+
+    async def friend_status_update(self, event):
+        # 发送好友状态更新到客户端
+        await self.send(text_data=json.dumps({
+            'type': 'friend_status_update',
+            'friend': event['friend'],
+            'is_online': event['is_online']
+        }))
+
+    async def new_friend_request(self, event):
+        # 发送新好友请求到客户端
+        await self.send(text_data=json.dumps({
+            'type': 'new_friend_request',
+            'requester': event['requester']
+        }))
+
+    @database_sync_to_async
+    def send_friend_request(self, target_username):
+        try:
+            target_user = User.objects.get(username=target_username)
+            # 这里可以添加发送好友请求的逻辑
+            pass
+        except User.DoesNotExist:
+            pass
