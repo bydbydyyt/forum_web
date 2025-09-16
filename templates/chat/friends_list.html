@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}好友管理 - 论坛与私聊系统{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4"><i class="fas fa-users"></i> 好友管理</h2>
+            
+            <!-- 我的好友代码 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-qrcode"></i> 我的好友代码</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="text-primary mb-1">{{ user.friend_code }}</h4>
+                            <small class="text-muted">分享此代码给朋友，他们可以通过此代码添加你为好友</small>
+                        </div>
+                        <button class="btn btn-outline-primary" onclick="copyFriendCode()">
+                            <i class="fas fa-copy"></i> 复制代码
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 搜索用户 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-search"></i> 添加好友</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" 
+                                   placeholder="输入好友代码或用户名搜索..." value="{{ search_query }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                        </div>
+                    </form>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        可以输入8位好友代码（如：abc12345）或用户名进行搜索
+                    </small>
+                    
+                    {% if search_results %}
+                        <div class="search-results">
+                            <h6>搜索结果：</h6>
+                            {% for user in search_results %}
+                                <div class="d-flex align-items-center justify-content-between border-bottom py-2">
+                                    <div class="d-flex align-items-center">
+                                        {% if user.avatar %}
+                                            <img src="{{ user.avatar.url }}" class="rounded-circle me-3" width="40" height="40" alt="头像">
+                                        {% else %}
+                                            <img src="{% static 'img/default-avatar.png' %}" class="rounded-circle me-3" width="40" height="40" alt="头像">
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ user.username }}</strong>
+                                            {% if user.first_name or user.last_name %}
+                                                <br><small class="text-muted">{{ user.first_name }} {{ user.last_name }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'chat:send_friend_request' user.username %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-user-plus"></i> 添加好友
+                                        </a>
+                                        <a href="{% url 'users:profile' user.username %}" class="btn btn-sm btn-outline-secondary ms-2">
+                                            <i class="fas fa-user"></i> 查看资料
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% elif search_query %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 没有找到匹配的用户
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 待处理的好友请求 -->
+            {% if pending_requests %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-clock"></i> 待处理的好友请求 <span class="badge bg-danger">{{ pending_requests.count }}</span></h5>
+                </div>
+                <div class="card-body">
+                    {% for request in pending_requests %}
+                        <div class="d-flex align-items-center justify-content-between border-bottom py-3">
+                            <div class="d-flex align-items-center">
+                                {% if request.user.avatar %}
+                                    <img src="{{ request.user.avatar.url }}" class="rounded-circle me-3" width="50" height="50" alt="头像">
+                                {% else %}
+                                    <img src="{% static 'img/default-avatar.png' %}" class="rounded-circle me-3" width="50" height="50" alt="头像">
+                                {% endif %}
+                                <div>
+                                    <strong>{{ request.user.username }}</strong>
+                                    <br><small class="text-muted">{{ request.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                            </div>
+                            <div>
+                                <a href="{% url 'chat:accept_friend_request' request.user.username %}" class="btn btn-success btn-sm me-2">
+                                    <i class="fas fa-check"></i> 接受
+                                </a>
+                                <a href="{% url 'chat:reject_friend_request' request.user.username %}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-times"></i> 拒绝
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- 我的好友列表 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-users"></i> 我的好友 <span class="badge bg-primary">{{ friends.count }}</span></h5>
+                </div>
+                <div class="card-body">
+                    {% if friends %}
+                        <div class="row">
+                            {% for friend in friends %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body text-center">
+                                            {% if friend.avatar %}
+                                                <img src="{{ friend.avatar.url }}" class="rounded-circle mb-3" width="80" height="80" alt="头像">
+                                            {% else %}
+                                                <img src="{% static 'img/default-avatar.png' %}" class="rounded-circle mb-3" width="80" height="80" alt="头像">
+                                            {% endif %}
+                                            <h6 class="card-title">{{ friend.username }}</h6>
+                                            {% if friend.first_name or friend.last_name %}
+                                                <p class="card-text text-muted small">{{ friend.first_name }} {{ friend.last_name }}</p>
+                                            {% endif %}
+                                            <div class="btn-group-vertical w-100">
+                                                <a href="{% url 'chat:chat' friend.username %}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-comment"></i> 发消息
+                                                </a>
+                                                <a href="{% url 'users:profile' friend.username %}" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fas fa-user"></i> 查看资料
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">还没有好友</h5>
+                            <p class="text-muted">使用上方搜索功能找到朋友并添加他们吧！</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 我发出的好友请求 -->
+            {% if sent_requests %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-paper-plane"></i> 我发出的好友请求</h5>
+                </div>
+                <div class="card-body">
+                    {% for request in sent_requests %}
+                        <div class="d-flex align-items-center justify-content-between border-bottom py-2">
+                            <div class="d-flex align-items-center">
+                                {% if request.friend.avatar %}
+                                    <img src="{{ request.friend.avatar.url }}" class="rounded-circle me-3" width="40" height="40" alt="头像">
+                                {% else %}
+                                    <img src="{% static 'img/default-avatar.png' %}" class="rounded-circle me-3" width="40" height="40" alt="头像">
+                                {% endif %}
+                                <div>
+                                    <strong>{{ request.friend.username }}</strong>
+                                    <br><small class="text-muted">{{ request.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-warning">等待回复</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyFriendCode() {
+    const friendCode = '{{ user.friend_code }}';
+    navigator.clipboard.writeText(friendCode).then(function() {
+        // 显示成功提示
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> 已复制';
+        button.classList.remove('btn-outline-primary');
+        button.classList.add('btn-success');
+        
+        setTimeout(function() {
+            button.innerHTML = originalText;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-primary');
+        }, 2000);
+    }).catch(function(err) {
+        console.error('复制失败: ', err);
+        alert('复制失败，请手动复制好友代码：' + friendCode);
+    });
+}
+</script>
+{% endblock %}
