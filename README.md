@@ -99,9 +99,9 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-5. 运行开发服务器：
+5. 运行开发服务器（使用 Daphne）：
 ```bash
-python manage.py runserver
+daphne -b 127.0.0.1 -p 8000 forum_web.asgi:application
 ```
 
 ## 项目结构
