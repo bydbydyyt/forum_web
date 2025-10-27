@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from django.shortcuts import redirect
 
 urlpatterns = [
-    path('', lambda request: redirect('forum:home'), name='home'),
+    path('', lambda request: redirect('forum:forum_list'), name='home'),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('chat/', include('chat.urls')),

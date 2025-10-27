@@ -175,7 +175,7 @@ CHANNEL_LAYERS = {
 AUTH_USER_MODEL = 'users.User'
 
 # 登录重定向
-LOGIN_REDIRECT_URL = 'forum:home'
+LOGIN_REDIRECT_URL = 'forum:forum_list'
 LOGIN_URL = 'users:login'
 LOGOUT_REDIRECT_URL = 'users:login'
 

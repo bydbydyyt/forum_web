@@ -5,52 +5,247 @@
 
 {% block content %}
 <div class="container mt-4">
+    <!-- 主题内容 -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                {% if topic.is_pinned %}
+                    <span class="badge bg-warning me-2"><i class="fas fa-thumbtack"></i> 置顶</span>
+                {% endif %}
+                {% if topic.is_essence %}
+                    <span class="badge bg-success me-2"><i class="fas fa-star"></i> 精华</span>
+                {% endif %}
+                <h2 class="mb-0">{{ topic.title }}</h2>
+            </div>
+            <div class="d-flex align-items-center">
+                <!-- 管理员操作按钮 -->
+                {% if user.is_authenticated and user.is_staff or user.is_superuser %}
+                <div class="btn-group me-3" role="group">
+                    <!-- 置顶按钮 -->
+                    <form method="post" action="{% url 'forum:toggle_topic_pin' topic.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-thumbtack"></i>
+                            <span class="ms-1">{% if topic.is_pinned %}取消置顶{% else %}置顶{% endif %}</span>
+                        </button>
+                    </form>
+                    <!-- 精华按钮 -->
+                    <form method="post" action="{% url 'forum:toggle_topic_essence' topic.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-star"></i>
+                            <span class="ms-1">{% if topic.is_essence %}取消精华{% else %}设为精华{% endif %}</span>
+                        </button>
+                    </form>
+                    <!-- 删除按钮（管理员） -->
+                    <form method="post" action="{% url 'forum:delete_topic' topic.id %}" class="d-inline" onsubmit="return confirm('确定要删除此帖子吗？此操作不可恢复。');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash"></i>
+                            <span class="ms-1">删除帖子</span>
+                        </button>
+                    </form>
+                </div>
+                {% elif user.is_authenticated and topic.author == user %}
+                <!-- 作者删除按钮 -->
+                <form method="post" action="{% url 'forum:delete_topic' topic.id %}" class="d-inline me-3" onsubmit="return confirm('确定要删除此帖子吗？此操作不可恢复。');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-trash"></i>
+                        <span class="ms-1">删除帖子</span>
+                    </button>
+                </form>
+                {% endif %}
+                
+                <!-- 点赞按钮 -->
+                <form method="post" action="{% url 'forum:topic_detail' topic.id %}" class="me-3">
+                    {% csrf_token %}
+                    <button type="submit" name="like" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-heart{% if user_has_liked %} text-danger{% endif %}"></i>
+                        <span class="ms-1">{{ topic.likes }}</span>
+                    </button>
+                </form>
+                <a href="{% url 'forum:forum_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> 返回列表
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center text-muted small">
+                        <span class="me-3">
+                            <i class="fas fa-user"></i> {{ topic.author.username }}
+                        </span>
+                        <span class="me-3">
+                            <i class="fas fa-clock"></i> {{ topic.created_at|date:"Y-m-d H:i" }}
+                        </span>
+                        <span class="me-3">
+                            <i class="fas fa-eye"></i> {{ topic.views }} 浏览
+                        </span>
+                        <span class="me-3">
+                            <i class="fas fa-comment"></i> {{ topic.replies.count }} 回复
+                        </span>
+                        <span>
+                            <i class="fas fa-heart"></i> {{ topic.likes }} 点赞
+                        </span>
+                    </div>
+                    
+                    <!-- 分类和标签 -->
+                    <div class="mt-2">
+                        {% if topic.category %}
+                            <a href="{% url 'forum:forum_list' %}?category={{ topic.category.id }}" class="badge bg-primary text-decoration-none me-2">
+                                <i class="fas fa-folder"></i> {{ topic.category.name }}
+                            </a>
+                        {% endif %}
+                        {% for tag in topic.tags.all %}
+                            <a href="{% url 'forum:forum_list' %}?tag={{ tag.id }}" class="badge text-decoration-none me-1" style="background-color: {{ tag.color }}; color: white;">
+                                <i class="fas fa-tag"></i> {{ tag.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="topic-content">
+                {{ topic.content|linebreaks }}
+            </div>
+        </div>
+    </div>
+
+    <!-- 回复列表 -->
     <div class="card mb-4">
         <div class="card-header">
-            <h2>{{ topic.title }}</h2>
-            <small class="text-muted">
-                作者: {{ topic.author.username }} | 
-                发布时间: {{ topic.created_at|date:"Y-m-d H:i" }} | 
-                浏览: {{ topic.views }}
-            </small>
+            <h4 class="mb-0">
+                <i class="fas fa-comments me-2"></i>回复列表 
+                <span class="badge bg-primary ms-2">{{ replies.paginator.count }}</span>
+            </h4>
         </div>
-        <div class="card-body">
-            {{ topic.content|linebreaks }}
+        <div class="card-body p-0">
+            {% if replies %}
+                <div class="list-group list-group-flush">
+                    {% for reply in replies %}
+                        <div class="list-group-item">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0">{{ reply.author.username }}</h6>
+                                        <small class="text-muted">{{ reply.created_at|date:"Y-m-d H:i" }}</small>
+                                    </div>
+                                    <div class="reply-content">
+                                        {{ reply.content|linebreaks }}
+                                    </div>
+                                    <div class="mt-2 text-muted small">
+                                        <span>#{{ forloop.counter }}</span>
+                                        <span class="ms-3">{{ reply.created_at|timesince }}前</span>
+                                        
+                                        <!-- 回复删除按钮 -->
+                                        {% if user.is_authenticated and user.is_staff or user.is_superuser or reply.author == user %}
+                                        <span class="ms-3">
+                                            <form method="post" action="{% url 'forum:delete_reply' reply.id %}" class="d-inline" onsubmit="return confirm('确定要删除此回复吗？此操作不可恢复。');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-xs p-1" style="font-size: 0.7rem;">
+                                                    <i class="fas fa-trash"></i> 删除
+                                                </button>
+                                            </form>
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">暂无回复，快来发表第一个回复吧！</p>
+                </div>
+            {% endif %}
         </div>
-    </div>
-
-    <h3 class="mb-4">回复列表</h3>
-    {% for reply in replies %}
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="d-flex justify-content-between">
-                <h6 class="card-subtitle mb-2 text-muted">{{ reply.author.username }}</h6>
-                <small class="text-muted">{{ reply.created_at|date:"Y-m-d H:i" }}</small>
+        
+        <!-- 回复分页导航 -->
+        {% if replies.has_other_pages %}
+            <div class="card-footer">
+                <nav aria-label="Reply pagination">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if replies.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ replies.previous_page_number }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for i in replies.paginator.page_range %}
+                            {% if replies.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if replies.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ replies.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
             </div>
-            <p class="card-text">{{ reply.content|linebreaks }}</p>
-        </div>
+        {% endif %}
     </div>
-    {% empty %}
-    <div class="alert alert-info">暂无回复</div>
-    {% endfor %}
 
+    <!-- 回复表单 -->
     {% if user.is_authenticated %}
-    <div class="card mt-4">
+    <div class="card">
         <div class="card-header">
-            <h4>发表回复</h4>
+            <h4 class="mb-0">
+                <i class="fas fa-edit me-2"></i>发表回复
+            </h4>
         </div>
         <div class="card-body">
             <form method="post" action="{% url 'forum:reply_create' topic.id %}">
                 {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary">提交回复</button>
+                <div class="mb-3">
+                    <label for="id_content" class="form-label">回复内容</label>
+                    <textarea name="content" class="form-control" id="id_content" rows="4" placeholder="请输入回复内容..." required></textarea>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">请文明发言，遵守社区规范</small>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>提交回复
+                    </button>
+                </div>
             </form>
         </div>
     </div>
     {% else %}
-    <div class="alert alert-warning mt-4">
-        请<a href="{% url 'admin:login' %}">登录</a>后发表回复
+    <div class="card">
+        <div class="card-body text-center">
+            <i class="fas fa-lock fa-2x text-warning mb-3"></i>
+            <h5>需要登录才能回复</h5>
+            <p class="text-muted">请<a href="{% url 'admin:login' %}" class="fw-bold">登录</a>后发表回复</p>
+        </div>
     </div>
     {% endif %}
 </div>
-{% endblock %} 
+{% endblock %}

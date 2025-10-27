@@ -19,13 +19,13 @@
     <!-- 导航栏 -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'forum:home' %}">论坛与私聊</a>
+            <a class="navbar-brand" href="{% url 'forum:forum_list' %}">论坛与私聊</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                        <a class="nav-link" href="{% url 'forum:home' %}">论坛</a>
+                        <a class="nav-link" href="{% url 'forum:forum_list' %}">论坛</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'chat:home' %}">私聊</a>
@@ -39,7 +39,7 @@
                     {% endif %}
                 </ul>
                 <!-- 搜索框 -->
-                <form class="d-flex me-3" action="{% url 'forum:home' %}" method="get">
+                <form class="d-flex me-3" action="{% url 'forum:forum_list' %}" method="get">
                     <input class="form-control me-2" type="search" name="q" placeholder="搜索用户、帖子或评论">
                     <button class="btn btn-outline-light" type="submit">搜索</button>
                 </form>
@@ -85,15 +85,6 @@
 
     <!-- 主要内容 -->
     <main class="container my-4">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-        
         {% block content %}{% endblock %}
     </main>
 
