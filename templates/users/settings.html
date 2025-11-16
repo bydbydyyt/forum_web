@@ -244,33 +244,10 @@
                             <div class="mb-4">
                                 <h5>上传新背景</h5>
                                 
-                                <!-- 背景尺寸选择 -->
-                                <div class="mb-3">
-                                    <label class="form-label">背景尺寸</label>
-                                    <div class="size-options">
-                                        <div class="size-option" data-size="1200x400">
-                                            <div class="size-preview wide"></div>
-                                            <span>宽屏 (1200x400)</span>
-                                        </div>
-                                        <div class="size-option" data-size="800x600">
-                                            <div class="size-preview square"></div>
-                                            <span>方形 (800x600)</span>
-                                        </div>
-                                        <div class="size-option" data-size="600x800">
-                                            <div class="size-preview tall"></div>
-                                            <span>竖屏 (600x800)</span>
-                                        </div>
-                                        <div class="size-option" data-size="1000x300">
-                                            <div class="size-preview ultra-wide"></div>
-                                            <span>超宽 (1000x300)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
                                 <div class="upload-area" id="uploadArea">
                                     <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
                                     <h6>拖拽图片到此处或点击上传</h6>
-                                    <p class="text-muted">支持 JPG, PNG, GIF 格式，建议尺寸 <span id="recommendedSize">1200x400</span> 像素</p>
+                                    <p class="text-muted">支持 JPG, PNG, GIF 格式，建议尺寸 1200x400 像素</p>
                                     <input type="file" id="backgroundFile" accept="image/*" style="display: none;">
                                 </div>
                             </div>
@@ -372,13 +349,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const cropCancel = document.getElementById('cropCancel');
     const saveBackground = document.getElementById('saveBackground');
     const presetBackgrounds = document.querySelectorAll('.preset-background');
-    const sizeOptions = document.querySelectorAll('.size-option');
-    const recommendedSizeSpan = document.getElementById('recommendedSize');
     
     let cropper = null;
     let selectedFile = null;
     let selectedPreset = null;
-    let selectedSize = '1200x400'; // 默认尺寸
     
     // 文件上传处理
     uploadArea.addEventListener('click', () => backgroundFile.click());
@@ -406,19 +380,6 @@ document.addEventListener('DOMContentLoaded', function() {
             handleFile(e.target.files[0]);
         }
     });
-
-    // 尺寸选项点击处理
-    sizeOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            sizeOptions.forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
-            selectedSize = option.dataset.size;
-            recommendedSizeSpan.textContent = selectedSize;
-        });
-    });
-    
-    // 默认选择第一个尺寸选项
-    sizeOptions[0].classList.add('selected');
     
     function handleFile(file) {
         if (!file.type.startsWith('image/')) {
@@ -445,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const image = cropPreview.querySelector('img');
             cropper = new Cropper(image, {
-                aspectRatio: parseInt(selectedSize.split('x')[0]) / parseInt(selectedSize.split('x')[1]),
+                aspectRatio: 1200 / 400, // 固定宽高比 1200x400
                 viewMode: 1,
                 dragMode: 'move',
                 autoCropArea: 1,
@@ -472,9 +433,6 @@ document.addEventListener('DOMContentLoaded', function() {
             presetBackgrounds.forEach(p => p.classList.remove('selected'));
             preset.classList.add('selected');
             selectedPreset = preset.dataset.preset;
-            
-            // 更新推荐尺寸显示
-            recommendedSizeSpan.textContent = selectedSize;
         });
     });
     
@@ -482,8 +440,8 @@ document.addEventListener('DOMContentLoaded', function() {
     cropSave.addEventListener('click', () => {
         if (cropper) {
             const canvas = cropper.getCroppedCanvas({
-                width: parseInt(selectedSize.split('x')[0]),
-                height: parseInt(selectedSize.split('x')[1])
+                width: 1200,
+                height: 400
             });
             
             canvas.toBlob((blob) => {
@@ -519,7 +477,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedPreset) {
             formData.append('preset_background', selectedPreset);
         }
-        formData.append('size', selectedSize); // 添加尺寸到表单数据
         formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
         
         fetch('{% url "users:update_background" %}', {
@@ -542,4 +499,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %} 
+{% endblock %}

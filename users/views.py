@@ -29,8 +29,8 @@ def profile(request, username):
     user = get_object_or_404(User, username=username)
     is_self = request.user == user
     
-    # 获取用户发布的帖子
-    posts = user.posts.all().order_by('-created_at')
+    # 获取用户发布的帖子（使用Topic模型）
+    posts = user.topics.all().order_by('-created_at')
     
     context = {
         'profile_user': user,

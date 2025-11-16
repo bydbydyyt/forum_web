@@ -188,8 +188,162 @@ class WebSocketClient {
     }
 }
 
+// 现代化滚动效果
+function setupSmoothScrolling() {
+    // 平滑滚动到元素
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// 导航栏滚动效果
+function setupNavbarScroll() {
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+        let lastScrollTop = 0;
+        
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // 添加滚动类
+            if (scrollTop > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+            
+            // 隐藏/显示导航栏（移动端）
+            if (window.innerWidth < 768) {
+                if (scrollTop > lastScrollTop && scrollTop > 100) {
+                    navbar.style.transform = 'translateY(-100%)';
+                } else {
+                    navbar.style.transform = 'translateY(0)';
+                }
+            }
+            
+            lastScrollTop = scrollTop;
+        });
+    }
+}
+
+// 卡片悬停效果增强
+function setupCardHoverEffects() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+}
+
+// 按钮涟漪效果
+function setupRippleEffects() {
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.cssText = `
+                width: ${size}px;
+                height: ${size}px;
+                left: ${x}px;
+                top: ${y}px;
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.6);
+                transform: scale(0);
+                animation: ripple 0.6s linear;
+            `;
+            
+            this.style.position = 'relative';
+            this.style.overflow = 'hidden';
+            this.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        });
+    });
+    
+    // 添加涟漪动画样式
+    if (!document.querySelector('#ripple-styles')) {
+        const style = document.createElement('style');
+        style.id = 'ripple-styles';
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+// 视差滚动效果
+function setupParallaxEffects() {
+    const parallaxElements = document.querySelectorAll('.profile-header');
+    
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        
+        parallaxElements.forEach(element => {
+            const rate = scrolled * -0.5;
+            element.style.transform = `translateY(${rate}px)`;
+        });
+    });
+}
+
+// 页面加载动画
+function setupPageLoadAnimations() {
+    // 添加页面加载动画
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.6s ease-in-out';
+    
+    window.addEventListener('load', () => {
+        document.body.style.opacity = '1';
+        
+        // 为所有卡片添加延迟动画
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'all 0.6s ease-out';
+            
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+}
+
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
+    // 初始化现代化效果
+    setupSmoothScrolling();
+    setupNavbarScroll();
+    setupCardHoverEffects();
+    setupRippleEffects();
+    setupParallaxEffects();
+    setupPageLoadAnimations();
+    
     // 初始化图片预览
     const imageInputs = document.querySelectorAll('input[type="file"][accept*="image"]');
     imageInputs.forEach(input => {

@@ -170,7 +170,7 @@ class PostVideo(models.Model):
 class Topic(models.Model):
     title = models.CharField('标题', max_length=200)
     content = models.TextField('内容')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='作者')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topics', verbose_name='作者')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='分类')
     tags = models.ManyToManyField(Tag, blank=True, verbose_name='标签')
     created_at = models.DateTimeField('创建时间', auto_now_add=True)

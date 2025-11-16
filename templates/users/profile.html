@@ -539,9 +539,6 @@
                     </h3>
                     <div class="friend-code">
                         <code>{{ profile_user.friend_code }}</code>
-                        <button class="btn-modern w-100 mt-2" onclick="copyFriendCode()">
-                            <i class="fas fa-copy"></i> 复制代码
-                        </button>
                     </div>
                 </div>
                 {% else %}
@@ -600,11 +597,8 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
                             <h5 class="text-primary mb-1">{{ profile_user.friend_code }}</h5>
-                            <small class="text-muted">可通过此代码添加好友</small>
+                            <small class="text-secondary">可通过此代码添加好友</small>
                         </div>
-                        <button class="btn btn-outline-primary btn-sm" onclick="copyProfileFriendCode()">
-                            <i class="fas fa-copy"></i>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -619,18 +613,6 @@
                                 <i class="fas fa-file-alt"></i> 我的帖子
                             </a>
                         </li>
-                        {% if profile_user.show_collections or user == profile_user %}
-                        <li class="nav-item">
-                            <a class="nav-link-modern" id="collections-tab" data-bs-toggle="tab" href="#collections">
-                                <i class="fas fa-bookmark"></i> 我的收藏
-                            </a>
-                        </li>
-                        {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link-modern" id="friends-tab" data-bs-toggle="tab" href="#friends">
-                                <i class="fas fa-user-friends"></i> 我的好友
-                            </a>
-                        </li>
                     </ul>
                 </div>
 
@@ -641,7 +623,7 @@
                         {% for post in posts %}
                             <div class="post-item hover-lift">
                                 <h5 class="post-title">
-                                    <a href="{% url 'forum:post_detail' post.id %}">
+                                    <a href="{% url 'forum:topic_detail' post.id %}">
                                         {{ post.title }}
                                     </a>
                                 </h5>
@@ -651,13 +633,13 @@
                                         <i class="fas fa-clock"></i> {{ post.created_at|timesince }}前
                                     </span>
                                     <span class="meta-item">
-                                        <i class="fas fa-eye"></i> {{ post.view_count }}
+                                        <i class="fas fa-eye"></i> {{ post.views }}
                                     </span>
                                     <span class="meta-item">
-                                        <i class="fas fa-heart"></i> {{ post.like_count }}
+                                        <i class="fas fa-heart"></i> {{ post.likes }}
                                     </span>
                                     <span class="meta-item">
-                                        <i class="fas fa-comments"></i> {{ post.comment_count }}
+                                        <i class="fas fa-comments"></i> {{ post.replies.count }}
                                     </span>
                                 </div>
                             </div>
@@ -667,53 +649,6 @@
                                 <p>还没有发布任何帖子</p>
                             </div>
                         {% endfor %}
-                    </div>
-                    
-                    {% if profile_user.show_collections or user == profile_user %}
-                        <div class="tab-pane fade" id="collections">
-                            <div class="collection-grid">
-                                {% for collection in collections %}
-                                    <div class="collection-item hover-lift">
-                                        <img src="{% if collection.post.images.first and collection.post.images.first.image.url %}{{ collection.post.images.first.image.url }}{% else %}{% static 'img/default-post.jpg' %}{% endif %}" 
-                                             alt="{{ collection.post.title }}" class="collection-image">
-                                        <div class="collection-info">
-                                            <h5 class="collection-title">{{ collection.post.title }}</h5>
-                                            <p class="text-secondary mb-0">
-                                                <small>收藏于 {{ collection.created_at|timesince }}前</small>
-                                            </p>
-                                        </div>
-                                    </div>
-                                {% empty %}
-                                    <div class="empty-state">
-                                        <i class="fas fa-bookmark"></i>
-                                        <p>还没有收藏任何帖子</p>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% endif %}
-                    
-                    <div class="tab-pane fade" id="friends">
-                        <div class="friends-grid">
-                            {% for friendship in friendships %}
-                                <div class="friend-item hover-lift">
-                                    <img src="{% if friendship.friend.avatar and friendship.friend.avatar.url %}{{ friendship.friend.avatar.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" 
-                                         alt="{{ friendship.friend.username }}" 
-                                         class="friend-avatar">
-                                    <div>
-                                        <h6 class="mb-0 text-white">{{ friendship.friend.username }}</h6>
-                                        <small class="text-secondary">
-                                            好友 {{ friendship.created_at|timesince }}
-                                        </small>
-                                    </div>
-                                </div>
-                            {% empty %}
-                                <div class="empty-state">
-                                    <i class="fas fa-user-friends"></i>
-                                    <p>还没有添加任何好友</p>
-                                </div>
-                            {% endfor %}
-                        </div>
                     </div>
                 </div>
             </div>
@@ -726,7 +661,7 @@
 <script>
 // 获取CSRF token
 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                  document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
+                  document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
 function copyFriendCode() {
     const friendCode = document.querySelector('.friend-code code').textContent;
     navigator.clipboard.writeText(friendCode).then(() => {
